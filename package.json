@@ -1,0 +1,25 @@
+{
+  "name": "usgp_daemon",
+  "version": "1.0.0",
+  "description": "USGP Daemon Part",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benjaminrobinet/usgp_daemon.git"
+  },
+  "author": "Benjamin Robinet",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/benjaminrobinet/usgp_daemon/issues"
+  },
+  "homepage": "https://github.com/benjaminrobinet/usgp_daemon#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "process": "^0.11.10",
+    "socket.io": "^2.1.1"
+  }
+}
