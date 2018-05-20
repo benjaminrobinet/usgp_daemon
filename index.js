@@ -1,31 +1,27 @@
+// IMPORTS
+// MODULES
 const app = require('express')();
 const bodyParser = require('body-parser');
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const cp = require('child_process');
-
+// const mongoose = require('mongoose');
+// CONFIGS
 const config = require('./config.json');
+// CLASS
+const Process = require('./class/Process.class.js');
+
+// INIT
+// mongoose.connect('mongodb://localhost/daemon');
+
 
 let games = {
     "minecraft": {
         "command": "java -jar minecraft.jar"
     }
-}
+};
 
 let processList = [];
-
-class Process{
-    constructor(game){
-        this.game = game;
-        this.process = this.spawnProcess(this.game);
-
-    }
-
-    spawnProcess(game){
-        let process = cp.spawn('node', ['test.js']);
-        return process;
-    }
-}
 
 function searchProcess(process){
     return process.process.pid === this.pid;
