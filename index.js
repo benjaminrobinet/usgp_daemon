@@ -5,21 +5,22 @@ const bodyParser = require('body-parser');
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const cp = require('child_process');
-const process = require('process');
+require('my-prototypes').init();
 // const mongoose = require('mongoose');
 // CONFIGS
-const config = require('./config.json');
+const config = require('./config');
+const routes = require('./routes');
 // CLASS
-const Process = require('./class/Process.class.js');
-const Game = require('./class/Game.class.js');
+const Process = require('./class/Process.class');
+const Game = require('./class/Game.class');
 
 // INIT
-// mongoose.connect('mongodb://localhost/daemon');
+var time;
 
 let games = [
     {
         "minecraft": {
-            "command": "java -jar minecraft_$version.jar",
+            "command": ['java', '-jar', 'minecraft_$server.jar'],
             "version": [
                 "1.0",
                 "2.0"
@@ -39,9 +40,48 @@ function searchGame(games){
     return games.name === this.name;
 }
 
+function dispatch(req, res){
+    let url = req.url;
+    let urlParts = url.split('/');
+    urlParts.shift();
+
+    let controllerName;
+
+    if(urlParts[0] === ''){
+        controllerName = routes['/'].capitalize() + 'Controller';
+    } else {
+        if(urlParts[0] in routes){
+            controllerName = routes[urlParts[0]].capitalize() + 'Controller';
+        } else {
+            controllerName = urlParts[0].capitalize() + 'Controller';
+        }
+    }
+
+    let Controller = require('./controllers/' + controllerName);
+    let controller = new Controller(req, res);
+    let action = urlParts.length > 1 ? urlParts[1] : null;
+    let params;
+
+    action = req.method.toLowerCase() + (action !== null ? action.capitalize() : '');
+
+    if(typeof controller[action] !== 'function'){
+        action = req.method.toLowerCase();
+        params = urlParts.slice(1);
+    } else {
+        params = urlParts.slice(2);
+    }
+
+    controller[action].apply(controller, params);
+}
+
 app.use(bodyParser.json({
     type: 'application/json'
 }));
+
+app.use(function (req, res, next) {
+    dispatch(req, res);
+});
+
 
 app.get('/', function (req, res) {
     console.log('GET ' + req.url);
@@ -104,6 +144,7 @@ app.put('/games', function (req, res) {
         return res.sendStatus(400);
     }
 
+
     if(gamesList.find(searchGame, {name: _body.name})){
         return res.sendStatus(405); // game already existing, not adding, should use POST to edit
     }
@@ -133,11 +174,15 @@ app.post('/game/:name/edit', function (req, res) {
     if(typeof _body.name !== 'string'){
         return res.sendStatus(400);
     }
-    if(typeof _body.command !== 'string'){
-        return res.sendStatus(400);
+    if(!Array.isArray(_body.command)){
+        if(_body.command.length === null){
+            return res.sendStatus(400);
+        }
     }
     if(!Array.isArray(_body.versions)){
-        return res.sendStatus(400);
+        if(_body.versions.length === null){
+            return res.sendStatus(400);
+        }
     }
 
     let _gameToEdit = gamesList.find(searchGame, {name: req.params.name});
