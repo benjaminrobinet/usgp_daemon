@@ -1,0 +1,50 @@
+class Dispatcher {
+
+    constructor(req, res) {
+        this.routes = require('../routes');
+        require('my-prototypes').init();
+        this.init(req, res);
+    }
+
+    init(req, res){
+        let url = req.url;
+        let urlParts = url.split('/');
+        urlParts.shift();
+
+        let controllerName;
+
+        if(urlParts[0] === ''){
+            controllerName = this.routes['/'].capitalize() + 'Controller';
+        } else {
+            if(urlParts[0] in this.routes){
+                controllerName = this.routes[urlParts[0]].capitalize() + 'Controller';
+            } else {
+                controllerName = urlParts[0].capitalize() + 'Controller';
+            }
+        }
+
+
+        try {
+            let Controller = require('../controllers/' + controllerName);
+            let controller = new Controller(req, res);
+            let action = urlParts.length > 1 ? urlParts[1] : null;
+            let params;
+
+            action = req.method.toLowerCase() + (action !== null ? action.capitalize() : '');
+
+            if(typeof controller[action] !== 'function'){
+                action = req.method.toLowerCase();
+                params = urlParts.slice(1);
+            } else {
+                params = urlParts.slice(2);
+            }
+
+            controller[action].apply(controller, params);
+        } catch (ex) {
+            res.sendStatus(404);
+        }
+
+    }
+}
+
+module.exports = Dispatcher;

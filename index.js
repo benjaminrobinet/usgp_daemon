@@ -1,4 +1,3 @@
-// IMPORTS
 // MODULES
 const app = require('express')();
 const bodyParser = require('body-parser');
@@ -6,28 +5,17 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const cp = require('child_process');
 require('my-prototypes').init();
-// const mongoose = require('mongoose');
+
 // CONFIGS
 const config = require('./config');
 const routes = require('./routes');
+
 // CLASS
 const Process = require('./class/Process.class');
 const Game = require('./class/Game.class');
 
 // INIT
-var time;
-
-let games = [
-    {
-        "minecraft": {
-            "command": ['java', '-jar', 'minecraft_$server.jar'],
-            "version": [
-                "1.0",
-                "2.0"
-            ]
-        }
-    }
-];
+const Dispatcher = require('./core/dispatcher');
 
 let processList = [];
 let gamesList = [];
@@ -40,46 +28,12 @@ function searchGame(games){
     return games.name === this.name;
 }
 
-function dispatch(req, res){
-    let url = req.url;
-    let urlParts = url.split('/');
-    urlParts.shift();
-
-    let controllerName;
-
-    if(urlParts[0] === ''){
-        controllerName = routes['/'].capitalize() + 'Controller';
-    } else {
-        if(urlParts[0] in routes){
-            controllerName = routes[urlParts[0]].capitalize() + 'Controller';
-        } else {
-            controllerName = urlParts[0].capitalize() + 'Controller';
-        }
-    }
-
-    let Controller = require('./controllers/' + controllerName);
-    let controller = new Controller(req, res);
-    let action = urlParts.length > 1 ? urlParts[1] : null;
-    let params;
-
-    action = req.method.toLowerCase() + (action !== null ? action.capitalize() : '');
-
-    if(typeof controller[action] !== 'function'){
-        action = req.method.toLowerCase();
-        params = urlParts.slice(1);
-    } else {
-        params = urlParts.slice(2);
-    }
-
-    controller[action].apply(controller, params);
-}
-
 app.use(bodyParser.json({
     type: 'application/json'
 }));
 
 app.use(function (req, res, next) {
-    dispatch(req, res);
+    new Dispatcher(req, res)
 });
 
 

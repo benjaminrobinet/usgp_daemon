@@ -5,9 +5,8 @@ class TestController {
         this.res = res;
     }
 
-    get(id,test){
+    get(){
         this.res.send('GET all');
-        console.log(id + test);
     }
 
     getFrancais(){
