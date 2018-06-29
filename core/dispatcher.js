@@ -1,8 +1,11 @@
 class Dispatcher {
 
     constructor(req, res) {
-        this.routes = require('../routes');
         require('my-prototypes').init();
+        this.pluralize = require('pluralize');
+
+        this.routes = require('../routes');
+
         this.init(req, res);
     }
 
@@ -27,20 +30,29 @@ class Dispatcher {
         try {
             let Controller = require('../controllers/' + controllerName);
             let controller = new Controller(req, res);
-            let action = urlParts.length > 1 ? urlParts[1] : null;
-            let params;
 
+            let action = urlParts.length > 1 ? urlParts[1] : null;
             action = req.method.toLowerCase() + (action !== null ? action.capitalize() : '');
 
+            let params;
+
             if(typeof controller[action] !== 'function'){
-                action = req.method.toLowerCase();
                 params = urlParts.slice(1);
+                action = req.method.toLowerCase();
             } else {
                 params = urlParts.slice(2);
+                if(params.length === 0 && req.method === 'GET'){
+                    action = 'c' + req.method.toLowerCase();
+                } else {
+                    action = req.method.toLowerCase();
+                }
             }
 
+            console.log(params.length);
+            console.log(action + '->' + params);
+
             controller[action].apply(controller, params);
-        } catch (ex) {
+        } catch (e) {
             res.sendStatus(404);
         }
 
